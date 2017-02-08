@@ -1,6 +1,11 @@
 package bemobi.hire.me.service;
 
+import bemobi.hire.me.data.UrlRepository;
 import bemobi.hire.me.domain.Url;
+import bemobi.hire.me.exception.AliasAlreadyExistsException;
+import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
+import bemobi.hire.me.hash.HashGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,20 +16,43 @@ import java.util.List;
 @Service
 public class UrlService {
 
+    UrlRepository urlRepository;
+    HashGenerator hashGenerator;
 
-    public Url reduceUrl(Url url){
-
-        return null;
+    @Autowired
+    public UrlService(UrlRepository urlRepository, HashGenerator hashGenerator) {
+        this.urlRepository = urlRepository;
+        this.hashGenerator = hashGenerator;
     }
 
-    public Url getExpandedUrl(String alias){
+    public Url reduceUrl(Url url) throws AliasAlreadyExistsException {
 
-        return null;
+        if (url.getAlias() == null)
+            url.setAlias(hashGenerator.genenateAlias(url.getContent()));
+
+        url.setAccess(0);
+        Url savedUrl = urlRepository.saveUrl(url);
+
+        if (savedUrl == null)
+            throw new AliasAlreadyExistsException(url.getAlias());
+
+        return savedUrl;
+    }
+
+    public Url getExpandedUrl(String alias) throws ShortenedUrlNotFoundException {
+
+        Url url = urlRepository.getUrlByAlias(alias);
+
+        if (url == null)
+            throw new ShortenedUrlNotFoundException(alias);
+
+        urlRepository.updateUrlAccess(url.getAccess() + 1, url.getAlias());
+
+        return url;
     }
 
     public List<Url> getMostAccessedUrls(){
-
-        return null;
+        return urlRepository.getMostFiveAccessedUrl();
     }
 
 }

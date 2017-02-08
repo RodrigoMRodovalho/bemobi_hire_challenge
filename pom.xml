@@ -119,6 +119,14 @@
             <version>1.9.5</version>
         </dependency>
 
+        <!-- HASH -->
+
+        <dependency>
+            <groupId>com.sangupta</groupId>
+            <artifactId>murmur</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -28,7 +28,7 @@ public class UrlService {
     public Url reduceUrl(Url url) throws AliasAlreadyExistsException {
 
         if (url.getAlias() == null)
-            url.setAlias(hashGenerator.genenateAlias(url.getContent()));
+            url.setAlias(hashGenerator.generateAlias(url.getContent()));
 
         url.setAccess(0);
         Url savedUrl = urlRepository.saveUrl(url);

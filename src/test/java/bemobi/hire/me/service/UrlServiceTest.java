@@ -65,12 +65,12 @@ public class UrlServiceTest {
 
         String generatedAlias = "!@ABCDE";
 
-        when(hashGenerator.genenateAlias(url.getContent())).thenReturn(generatedAlias);
+        when(hashGenerator.generateAlias(url.getContent())).thenReturn(generatedAlias);
         when(urlRepository.saveUrl(url)).thenReturn(url);
 
         Url reducedUrl = urlService.reduceUrl(url);
 
-        verify(hashGenerator).genenateAlias(url.getContent());
+        verify(hashGenerator).generateAlias(url.getContent());
 
         url.setAlias(generatedAlias);
         url.setAccess(0);

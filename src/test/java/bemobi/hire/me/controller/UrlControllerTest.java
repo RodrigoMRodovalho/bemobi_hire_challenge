@@ -1,0 +1,198 @@
+package bemobi.hire.me.controller;
+
+import bemobi.hire.me.UrlShortenerApplication;
+import bemobi.hire.me.domain.Constants;
+import bemobi.hire.me.domain.Statistics;
+import bemobi.hire.me.domain.Url;
+import bemobi.hire.me.exception.AliasAlreadyExistsException;
+import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
+import bemobi.hire.me.response.ErrorResponse;
+import bemobi.hire.me.response.ExpandResponse;
+import bemobi.hire.me.response.MostAccessedResponse;
+import bemobi.hire.me.response.ReduceResponse;
+import bemobi.hire.me.service.UrlService;
+import com.google.gson.Gson;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+/**
+ * Created by rrodovalho on 08/02/17.
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = UrlShortenerApplication.class)
+@WebAppConfiguration
+public class UrlControllerTest {
+
+    MockMvc mockMvc;
+
+    @Autowired
+    WebApplicationContext webApplicationContext;
+
+    @Autowired
+    Gson gson;
+
+    @MockBean
+    UrlService urlServiceMock;
+
+    @Before
+    public void setUp() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
+
+    @Test
+    public void testReduceUrl_withAlias_Successfuly() throws Exception {
+
+        Url url = Url.builder()
+                .alias("alias")
+                .content("url")
+                .build();
+
+        when(urlServiceMock.reduceUrl(url)).thenReturn(url);
+
+        //// TODO: 08/02/17 fix time taken verification
+
+        mockMvc.perform(put(Constants.URL_MAPPING.REDUCE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(gson.toJson(url)))
+                .andExpect(status().isCreated())
+                .andExpect(content().json(gson.toJson(
+                        ReduceResponse.builder()
+                                        .alias(url.getAlias())
+                                        .url(url.getContent())
+                                        .statistics(new Statistics("0ms"))
+                                        .build())));
+
+    }
+
+    @Test
+    public void testReduceUrl_withoutAlias_Successfuly() throws Exception {
+
+        Url url = Url.builder()
+                .content("url")
+                .build();
+
+        String generatedAlias = "ABCDEF";
+
+        when(urlServiceMock.reduceUrl(url)).thenReturn(new Url(url.getContent(),generatedAlias,0));
+
+        //// TODO: 08/02/17 fix time taken verification
+
+        mockMvc.perform(put(Constants.URL_MAPPING.REDUCE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(gson.toJson(url)))
+                .andExpect(status().isCreated())
+                .andExpect(content().json(gson.toJson(
+                        ReduceResponse.builder()
+                                .alias(generatedAlias)
+                                .url(url.getContent())
+                                .statistics(new Statistics("0ms"))
+                                .build())));
+
+
+    }
+
+    @Test
+    public void testReduceUrl_withAlias_Failure() throws Exception {
+
+        Url url = Url.builder()
+                .content("url")
+                .build();
+
+        String generatedAlias = "ABCDEF";
+
+        when(urlServiceMock.reduceUrl(url)).thenThrow(new AliasAlreadyExistsException(generatedAlias));
+
+        mockMvc.perform(put(Constants.URL_MAPPING.REDUCE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(gson.toJson(url)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().json(gson.toJson(
+                        ErrorResponse.builder()
+                                .alias(generatedAlias)
+                                .errorCode(Constants.ERROR_INFO.CODE_ALIAS_ALREADY_USED)
+                                .description(Constants.ERROR_INFO.DESCRIPTION_ALIAS_ALREADY_USED)
+                                .build())));
+
+    }
+
+    @Test
+    public void testExpandUrl_Successfuly() throws Exception {
+
+        Url url = Url.builder()
+                .alias("alias")
+                .content("url")
+                .build();
+
+        when(urlServiceMock.getExpandedUrl(url.getAlias())).thenReturn(url);
+
+        mockMvc.perform(get(Constants.URL_MAPPING.EXPAND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("alias",url.getAlias()))
+                .andExpect(status().isOk())
+                .andExpect(content().json(gson.toJson(
+                        ExpandResponse.builder()
+                                .alias(url.getAlias())
+                                .url(url.getContent())
+                                .build())));
+    }
+
+    @Test
+    public void testExpandUrl_Failure() throws Exception {
+
+        String alias = "alias";
+
+        when(urlServiceMock.getExpandedUrl(alias)).thenThrow(new ShortenedUrlNotFoundException(alias));
+
+        mockMvc.perform(get(Constants.URL_MAPPING.EXPAND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("alias",alias))
+                .andExpect(status().isNotFound())
+                .andExpect(content().json(gson.toJson(
+                        ErrorResponse.builder()
+                                .alias(alias)
+                                .errorCode(Constants.ERROR_INFO.CODE_URL_NOT_FOUND)
+                                .description(Constants.ERROR_INFO.DESCRIPTION_URL_NOT_FOUND)
+                                .build())));
+
+    }
+
+    @Test
+    public void testTenMostAccessed() throws Exception {
+
+        List<Url> topFiveUrlsList = new ArrayList<>();
+        topFiveUrlsList.add(new Url("www.bemobi.com.br","bmob",5));
+        topFiveUrlsList.add(new Url("www.facebook.com/bemobi","fbmob",4));
+        topFiveUrlsList.add(new Url("www.twitter.com/bemobi","tbmob",3));
+        topFiveUrlsList.add(new Url("www.instagram.com/bemobi","ibmob",2));
+        topFiveUrlsList.add(new Url("www.snapchat.com/bemobi","sbmob",1));
+
+        when(urlServiceMock.getMostAccessedUrls()).thenReturn(topFiveUrlsList);
+
+        mockMvc.perform(get(Constants.URL_MAPPING.TEN_MOST_ACCESSED))
+                .andExpect(status().isOk())
+                .andExpect(content().json(gson.toJson(
+                        new MostAccessedResponse(topFiveUrlsList))));
+
+    }
+}

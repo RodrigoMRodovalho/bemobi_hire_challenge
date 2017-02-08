@@ -13,13 +13,12 @@ import lombok.RequiredArgsConstructor;
 
 @Builder
 @Data
-@RequiredArgsConstructor
 @AllArgsConstructor
 public class Url {
-    @SerializedName("url")
+//    @SerializedName("url")
     String content;
-    @SerializedName("CUSTOM_ALIAS")
+//    @SerializedName("CUSTOM_ALIAS")
     String alias;
-    @Expose
+//    @Expose
     int access;
 }

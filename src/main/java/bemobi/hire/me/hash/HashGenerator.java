@@ -9,6 +9,10 @@ public class HashGenerator {
 
     private static final long SEED = 12345678;
 
+    public HashGenerator(){
+
+    }
+
     public String generateAlias(String urlContent){
 
         byte[] urlContentByteArray = urlContent.getBytes();

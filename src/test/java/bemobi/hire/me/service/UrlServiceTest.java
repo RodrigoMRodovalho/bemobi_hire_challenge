@@ -2,20 +2,19 @@ package bemobi.hire.me.service;
 
 import bemobi.hire.me.data.UrlRepository;
 import bemobi.hire.me.domain.Url;
-import bemobi.hire.me.exception.AliasAlreadyExistsException;
 import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
 import bemobi.hire.me.hash.HashGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,7 +45,7 @@ public class UrlServiceTest {
                 .url("http://www.bemobi.com.br")
                 .build();
 
-        when(urlRepository.saveUrl(url)).thenReturn(url);
+        when(urlRepository.saveUrl(url)).thenReturn(1);
 
         Url reducedUrl = urlService.reduceUrl(url);
 
@@ -66,7 +65,7 @@ public class UrlServiceTest {
         String generatedAlias = "!@ABCDE";
 
         when(hashGenerator.generateAlias(url.getUrl())).thenReturn(generatedAlias);
-        when(urlRepository.saveUrl(url)).thenReturn(url);
+        when(urlRepository.saveUrl(url)).thenReturn(1);
 
         Url reducedUrl = urlService.reduceUrl(url);
 
@@ -81,7 +80,7 @@ public class UrlServiceTest {
 
     }
 
-    @Test(expected = AliasAlreadyExistsException.class)
+    @Test(expected = DuplicateKeyException.class)
     public void testReduceUrlWithAlias_Failure() throws Exception {
 
         Url url = Url.builder()
@@ -89,7 +88,7 @@ public class UrlServiceTest {
                 .url("http://www.bemobi.com.br")
                 .build();
 
-        when(urlRepository.saveUrl(any())).thenReturn(null);
+        when(urlRepository.saveUrl(any())).thenThrow(new DuplicateKeyException("alias"));
         urlService.reduceUrl(url);
     }
 

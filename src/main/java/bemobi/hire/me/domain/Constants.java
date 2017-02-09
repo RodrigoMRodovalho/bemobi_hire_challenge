@@ -22,4 +22,12 @@ public interface Constants {
 
     }
 
+    interface DATABASE_CONFIG{
+        String DRIVER = "com.mysql.jdbc.Driver";
+        String URL_PRODUCTION = "jdbc:mysql://localhost:3306/shortenDB?useSSL=false";
+        String URL_DEVELOPMENT = "jdbc:mysql://localhost:3306/shortenDBDev?useSSL=false";
+        String USERNAME = "root";
+        String PASSWORD = "gcm123";
+    }
+
 }

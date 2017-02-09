@@ -31,12 +31,12 @@ public class UrlService {
             url.setAlias(hashGenerator.generateAlias(url.getUrl()));
 
         url.setAccess(0);
-        Url savedUrl = urlRepository.saveUrl(url);
+        int ret = urlRepository.saveUrl(url);
 
-        if (savedUrl == null)
+        if (ret == 0)
             throw new AliasAlreadyExistsException(url.getAlias());
 
-        return savedUrl;
+        return url;
     }
 
     public Url getExpandedUrl(String alias) throws ShortenedUrlNotFoundException {

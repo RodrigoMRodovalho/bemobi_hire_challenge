@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS URL (
+  alias VARCHAR(255),
+  url VARCHAR(255),
+  access INTEGER,
+  PRIMARY KEY(alias)
+);

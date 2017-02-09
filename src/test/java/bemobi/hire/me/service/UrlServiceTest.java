@@ -43,7 +43,7 @@ public class UrlServiceTest {
 
         Url url = Url.builder()
                 .alias("bemobi")
-                .content("http://www.bemobi.com.br")
+                .url("http://www.bemobi.com.br")
                 .build();
 
         when(urlRepository.saveUrl(url)).thenReturn(url);
@@ -60,17 +60,17 @@ public class UrlServiceTest {
     public void testReduceUrlWithoutAlias_Successfuly() throws Exception {
 
         Url url = Url.builder()
-                .content("http://www.bemobi.com.br")
+                .url("http://www.bemobi.com.br")
                 .build();
 
         String generatedAlias = "!@ABCDE";
 
-        when(hashGenerator.generateAlias(url.getContent())).thenReturn(generatedAlias);
+        when(hashGenerator.generateAlias(url.getUrl())).thenReturn(generatedAlias);
         when(urlRepository.saveUrl(url)).thenReturn(url);
 
         Url reducedUrl = urlService.reduceUrl(url);
 
-        verify(hashGenerator).generateAlias(url.getContent());
+        verify(hashGenerator).generateAlias(url.getUrl());
 
         url.setAlias(generatedAlias);
         url.setAccess(0);
@@ -86,7 +86,7 @@ public class UrlServiceTest {
 
         Url url = Url.builder()
                 .alias("bemobi")
-                .content("http://www.bemobi.com.br")
+                .url("http://www.bemobi.com.br")
                 .build();
 
         when(urlRepository.saveUrl(any())).thenReturn(null);
@@ -98,7 +98,7 @@ public class UrlServiceTest {
 
         Url url = Url.builder()
                 .alias("bemobi")
-                .content("http://www.bemobi.com.br")
+                .url("http://www.bemobi.com.br")
                 .build();
 
         when(urlRepository.getUrlByAlias(url.getAlias())).thenReturn(url);
@@ -126,10 +126,10 @@ public class UrlServiceTest {
         topFiveUrlsList.add(new Url("www.instagram.com/bemobi","ibmob",2));
         topFiveUrlsList.add(new Url("www.snapchat.com/bemobi","sbmob",1));
 
-        when(urlRepository.getMostFiveAccessedUrl()).thenReturn(topFiveUrlsList);
+        when(urlRepository.getMostTenAccessedUrl()).thenReturn(topFiveUrlsList);
 
         List<Url> mostAccesed = urlService.getMostAccessedUrls();
-        verify(urlRepository).getMostFiveAccessedUrl();
+        verify(urlRepository).getMostTenAccessedUrl();
         assertEquals(topFiveUrlsList,mostAccesed);
 
     }

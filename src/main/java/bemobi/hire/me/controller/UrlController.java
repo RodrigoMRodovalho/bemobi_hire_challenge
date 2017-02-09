@@ -32,10 +32,10 @@ public class UrlController {
     Gson gson;
 
     @RequestMapping(value = Constants.URL_MAPPING.REDUCE, method = RequestMethod.PUT)
-    public ResponseEntity reduceUrl(@RequestBody Url url) throws AliasAlreadyExistsException {
+    public ResponseEntity reduceUrl(@RequestParam String url, @RequestParam(required = false) String alias) throws AliasAlreadyExistsException {
 
         Instant before = Instant.now();
-        Url reducedUrl = urlService.reduceUrl(url);
+        Url reducedUrl = urlService.reduceUrl(new Url(url,alias,0));
         Instant after = Instant.now();
 
         return ResponseEntity
@@ -44,7 +44,7 @@ public class UrlController {
                     gson.toJson(
                         ReduceResponse.builder()
                             .alias(reducedUrl.getAlias())
-                            .url(reducedUrl.getContent())
+                            .url(reducedUrl.getUrl())
                             .statistics(
                                     new Statistics(Duration.between(before, after)
                                     .toMillis() + "ms")
@@ -64,7 +64,7 @@ public class UrlController {
                 .body(gson.toJson(
                         ExpandResponse.builder()
                                 .alias(expandedUrl.getAlias())
-                                .url(expandedUrl.getContent()))
+                                .url(expandedUrl.getUrl()))
                 );
     }
 

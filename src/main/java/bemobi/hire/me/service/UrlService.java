@@ -28,7 +28,7 @@ public class UrlService {
     public Url reduceUrl(Url url) throws AliasAlreadyExistsException {
 
         if (url.getAlias() == null)
-            url.setAlias(hashGenerator.generateAlias(url.getContent()));
+            url.setAlias(hashGenerator.generateAlias(url.getUrl()));
 
         url.setAccess(0);
         Url savedUrl = urlRepository.saveUrl(url);
@@ -52,7 +52,7 @@ public class UrlService {
     }
 
     public List<Url> getMostAccessedUrls(){
-        return urlRepository.getMostFiveAccessedUrl();
+        return urlRepository.getMostTenAccessedUrl();
     }
 
 }

@@ -2,14 +2,12 @@ package bemobi.hire.me.controller;
 
 import bemobi.hire.me.UrlShortenerApplication;
 import bemobi.hire.me.domain.Constants;
-import bemobi.hire.me.domain.Statistics;
 import bemobi.hire.me.domain.Url;
 import bemobi.hire.me.exception.AliasAlreadyExistsException;
 import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
 import bemobi.hire.me.response.ErrorResponse;
 import bemobi.hire.me.response.ExpandResponse;
 import bemobi.hire.me.response.MostAccessedResponse;
-import bemobi.hire.me.response.ReduceResponse;
 import bemobi.hire.me.service.UrlService;
 import com.google.gson.Gson;
 import org.junit.Before;
@@ -28,11 +26,13 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -65,49 +65,39 @@ public class UrlControllerTest {
 
         Url url = Url.builder()
                 .alias("alias")
-                .content("url")
+                .url("url")
                 .build();
 
         when(urlServiceMock.reduceUrl(url)).thenReturn(url);
 
-        //// TODO: 08/02/17 fix time taken verification
-
         mockMvc.perform(put(Constants.URL_MAPPING.REDUCE)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(gson.toJson(url)))
+                .param("url",url.getUrl())
+                .param("alias",url.getAlias()))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(gson.toJson(
-                        ReduceResponse.builder()
-                                        .alias(url.getAlias())
-                                        .url(url.getContent())
-                                        .statistics(new Statistics("0ms"))
-                                        .build())));
-
+                .andExpect(jsonPath("$.alias", is("alias")))
+                .andExpect(jsonPath("$.statistics", notNullValue()))
+                .andExpect(jsonPath("$.url", is("url")));
     }
 
     @Test
     public void testReduceUrl_withoutAlias_Successfuly() throws Exception {
 
         Url url = Url.builder()
-                .content("url")
+                .url("url")
                 .build();
 
         String generatedAlias = "ABCDEF";
 
-        when(urlServiceMock.reduceUrl(url)).thenReturn(new Url(url.getContent(),generatedAlias,0));
-
-        //// TODO: 08/02/17 fix time taken verification
+        when(urlServiceMock.reduceUrl(url)).thenReturn(new Url(url.getUrl(),generatedAlias,0));
 
         mockMvc.perform(put(Constants.URL_MAPPING.REDUCE)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(gson.toJson(url)))
+                .param("url",url.getUrl()))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(gson.toJson(
-                        ReduceResponse.builder()
-                                .alias(generatedAlias)
-                                .url(url.getContent())
-                                .statistics(new Statistics("0ms"))
-                                .build())));
+                .andExpect(jsonPath("$.alias", is(generatedAlias)))
+                .andExpect(jsonPath("$.statistics", notNullValue()))
+                .andExpect(jsonPath("$.url", is("url")));
 
 
     }
@@ -116,20 +106,20 @@ public class UrlControllerTest {
     public void testReduceUrl_withAlias_Failure() throws Exception {
 
         Url url = Url.builder()
-                .content("url")
+                .url("url")
+                .alias("alias")
                 .build();
 
-        String generatedAlias = "ABCDEF";
-
-        when(urlServiceMock.reduceUrl(url)).thenThrow(new AliasAlreadyExistsException(generatedAlias));
+        when(urlServiceMock.reduceUrl(url)).thenThrow(new AliasAlreadyExistsException(url.getAlias()));
 
         mockMvc.perform(put(Constants.URL_MAPPING.REDUCE)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(gson.toJson(url)))
+                .param("url",url.getUrl())
+                .param("alias",url.getAlias()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().json(gson.toJson(
                         ErrorResponse.builder()
-                                .alias(generatedAlias)
+                                .alias(url.getAlias())
                                 .errorCode(Constants.ERROR_INFO.CODE_ALIAS_ALREADY_USED)
                                 .description(Constants.ERROR_INFO.DESCRIPTION_ALIAS_ALREADY_USED)
                                 .build())));
@@ -141,7 +131,7 @@ public class UrlControllerTest {
 
         Url url = Url.builder()
                 .alias("alias")
-                .content("url")
+                .url("url")
                 .build();
 
         when(urlServiceMock.getExpandedUrl(url.getAlias())).thenReturn(url);
@@ -153,7 +143,7 @@ public class UrlControllerTest {
                 .andExpect(content().json(gson.toJson(
                         ExpandResponse.builder()
                                 .alias(url.getAlias())
-                                .url(url.getContent())
+                                .url(url.getUrl())
                                 .build())));
     }
 

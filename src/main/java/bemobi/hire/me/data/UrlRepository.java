@@ -15,5 +15,5 @@ public interface UrlRepository {
 
     int updateUrlAccess(int currentAccess, String alias);
 
-    List<Url> getMostFiveAccessedUrl();
+    List<Url> getMostTenAccessedUrl();
 }

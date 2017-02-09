@@ -2,13 +2,13 @@ package bemobi.hire.me.service;
 
 import bemobi.hire.me.data.UrlRepository;
 import bemobi.hire.me.domain.Url;
+import bemobi.hire.me.exception.AliasAlreadyExistsException;
 import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
 import bemobi.hire.me.hash.HashGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.dao.DuplicateKeyException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +80,7 @@ public class UrlServiceTest {
 
     }
 
-    @Test(expected = DuplicateKeyException.class)
+    @Test(expected = AliasAlreadyExistsException.class)
     public void testReduceUrlWithAlias_Failure() throws Exception {
 
         Url url = Url.builder()
@@ -88,7 +88,7 @@ public class UrlServiceTest {
                 .url("http://www.bemobi.com.br")
                 .build();
 
-        when(urlRepository.saveUrl(any())).thenThrow(new DuplicateKeyException("alias"));
+        when(urlRepository.saveUrl(any())).thenThrow(new AliasAlreadyExistsException("alias"));
         urlService.reduceUrl(url);
     }
 

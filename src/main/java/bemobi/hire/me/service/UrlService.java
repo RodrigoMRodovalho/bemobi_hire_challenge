@@ -6,6 +6,7 @@ import bemobi.hire.me.exception.AliasAlreadyExistsException;
 import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
 import bemobi.hire.me.hash.HashGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,10 +32,12 @@ public class UrlService {
             url.setAlias(hashGenerator.generateAlias(url.getUrl()));
 
         url.setAccess(0);
-        int ret = urlRepository.saveUrl(url);
-
-        if (ret == 0)
+        try{
+            urlRepository.saveUrl(url);
+        }
+        catch (DuplicateKeyException ex){
             throw new AliasAlreadyExistsException(url.getAlias());
+        }
 
         return url;
     }

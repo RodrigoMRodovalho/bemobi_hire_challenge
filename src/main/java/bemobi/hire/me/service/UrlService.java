@@ -1,6 +1,7 @@
 package bemobi.hire.me.service;
 
 import bemobi.hire.me.data.UrlRepository;
+import bemobi.hire.me.domain.Constants;
 import bemobi.hire.me.domain.Url;
 import bemobi.hire.me.exception.AliasAlreadyExistsException;
 import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
@@ -28,18 +29,22 @@ public class UrlService {
 
     public Url reduceUrl(Url url) throws AliasAlreadyExistsException {
 
-        if (url.getAlias() == null)
-            url.setAlias(hashGenerator.generateAlias(url.getUrl()));
+        Url reducedUrl = new Url();
 
-        url.setAccess(0);
+        if (url.getAlias() == null)
+            reducedUrl.setAlias(hashGenerator.generateAlias(url.getUrl()));
+        else
+            reducedUrl.setAlias(url.getAlias());
+
+        reducedUrl.setAccess(0);
         try{
-            urlRepository.saveUrl(url);
+            urlRepository.saveUrl(reducedUrl);
         }
         catch (DuplicateKeyException ex){
             throw new AliasAlreadyExistsException(url.getAlias());
         }
-
-        return url;
+        reducedUrl.setUrl(Constants.SHORTEN_URL_PREFIX + reducedUrl.getAlias());
+        return reducedUrl;
     }
 
     public Url getExpandedUrl(String alias) throws ShortenedUrlNotFoundException {

@@ -30,4 +30,6 @@ public interface Constants {
         String PASSWORD = "gcm123";
     }
 
+    String SHORTEN_URL_PREFIX = "http://shortener/u/";
+
 }

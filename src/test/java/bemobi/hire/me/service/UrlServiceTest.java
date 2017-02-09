@@ -1,6 +1,7 @@
 package bemobi.hire.me.service;
 
 import bemobi.hire.me.data.UrlRepository;
+import bemobi.hire.me.domain.Constants;
 import bemobi.hire.me.domain.Url;
 import bemobi.hire.me.exception.AliasAlreadyExistsException;
 import bemobi.hire.me.exception.ShortenedUrlNotFoundException;
@@ -9,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,12 +47,17 @@ public class UrlServiceTest {
                 .url("http://www.bemobi.com.br")
                 .build();
 
-        when(urlRepository.saveUrl(url)).thenReturn(1);
+        Url shortenUrl = Url.builder()
+                .alias("bemobi")
+                .url(Constants.SHORTEN_URL_PREFIX + "bemobi")
+                .build();
+
+        when(urlRepository.saveUrl(shortenUrl)).thenReturn(1);
 
         Url reducedUrl = urlService.reduceUrl(url);
 
-        verify(urlRepository).saveUrl(url);
-        assertEquals(url,reducedUrl);
+        verify(urlRepository).saveUrl(shortenUrl);
+        assertEquals(reducedUrl,shortenUrl);
         assertEquals(reducedUrl.getAccess(),0);
 
     }
@@ -58,24 +65,27 @@ public class UrlServiceTest {
     @Test
     public void testReduceUrlWithoutAlias_Successfuly() throws Exception {
 
+        String generatedAlias = "!@ABCDE";
+
         Url url = Url.builder()
                 .url("http://www.bemobi.com.br")
                 .build();
 
-        String generatedAlias = "!@ABCDE";
+        Url shortenUrl = Url.builder()
+                .url(Constants.SHORTEN_URL_PREFIX + generatedAlias)
+                .alias(generatedAlias)
+                .build();
+
 
         when(hashGenerator.generateAlias(url.getUrl())).thenReturn(generatedAlias);
-        when(urlRepository.saveUrl(url)).thenReturn(1);
+        when(urlRepository.saveUrl(shortenUrl)).thenReturn(1);
 
         Url reducedUrl = urlService.reduceUrl(url);
 
         verify(hashGenerator).generateAlias(url.getUrl());
 
-        url.setAlias(generatedAlias);
-        url.setAccess(0);
-
-        verify(urlRepository).saveUrl(url);
-        assertEquals(url,reducedUrl);
+        verify(urlRepository).saveUrl(shortenUrl);
+        assertEquals(Constants.SHORTEN_URL_PREFIX + generatedAlias,reducedUrl.getUrl());
         assertEquals(reducedUrl.getAccess(),0);
 
     }
@@ -88,7 +98,7 @@ public class UrlServiceTest {
                 .url("http://www.bemobi.com.br")
                 .build();
 
-        when(urlRepository.saveUrl(any())).thenThrow(new AliasAlreadyExistsException("alias"));
+        when(urlRepository.saveUrl(any())).thenThrow(new DuplicateKeyException("alias"));
         urlService.reduceUrl(url);
     }
 

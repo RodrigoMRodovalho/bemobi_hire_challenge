@@ -36,6 +36,7 @@ public class UrlService {
         else
             reducedUrl.setAlias(url.getAlias());
 
+        reducedUrl.setUrl(url.getUrl());
         reducedUrl.setAccess(0);
         try{
             urlRepository.saveUrl(reducedUrl);

@@ -1,0 +1,29 @@
+title Retrieve Url Sequence Diagram
+
+RestClient->+UrlController: ResponseEntity: expandUrl(alias)
+note left of UrlController: GET Method - Endpoint=> http://shortener/expand  Params=> alias
+UrlController->+UrlService:Url: getExpandedUrl(alias)
+UrlService->+UrlRepository:Url: getUrlByAlias(alias)
+UrlRepository->-UrlService:url
+alt url != null
+    UrlService->+UrlRepository:int:updateUrlAccess()
+    UrlRepository->-UrlService:ret
+    UrlService->-UrlController:expanded_url
+    UrlService->*Url:String getAlias()
+    Url->UrlService:alias
+    UrlService->*Url:String getUrl()
+    Url->UrlService:url
+    UrlController->+ExpandResponse:ExpandResponse:creates(alias,url))
+    ExpandResponse->-UrlController:expand_response
+    UrlController->+ResponseEntity:ResponseEntity:create(200,expand_response)
+    ResponseEntity->-UrlController:response_entity
+    UrlController->-RestClient:response_entity
+else
+note over UrlService: throws new ShortenedUrlNotFoundException(alias)
+    UrlService->+ErrorHandlerController: ResponseEntity: shortenedUrlNotFoundException(shortenedUrlNotFoundException)
+    ErrorHandlerController->+ErrorResponse:ErrorResponse:creates(alias,002,SHORTENED URL NOT FOUND)
+    ErrorResponse->-ErrorHandlerController:error_response
+    ErrorHandlerController->+ResponseEntity:ResponseEntity:create(404,error_response)
+    ResponseEntity->-ErrorHandlerController:response_entity
+    ErrorHandlerController->-RestClient:response_entity
+end

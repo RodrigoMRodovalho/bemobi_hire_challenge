@@ -1,0 +1,37 @@
+title Shorten Url Sequence Diagram
+
+RestClient->UrlController: ResponseEntity: reduceUrl(url,alias)
+note left of UrlController: PUT Method - Endpoint=> http://shortener/reduce  Params=> url, alias
+end note
+UrlController->*Url: Url: creates(url,alias,0)
+Url->-UrlController: Url
+UrlController->UrlService:Url: reduceUrl(url)
+UrlService->Url: String: getAlias()
+Url->-UrlService: newAlias
+opt newAlias == null
+    UrlService->Url: String: getUrl()
+    Url->-UrlService: url
+    note over HashGenerator: Computes using Murmur
+    end note
+    UrlService->HashGenerator: long: computeHash(url)
+    HashGenerator->-UrlService: hash
+    UrlService->BaseEncodeUtil:<<static>>String:encodeToBase62(hash)
+    BaseEncodeUtil->-UrlService: newAlias
+    UrlService->Url:setAlias(newAlias)
+    Url->-UrlService:
+end
+UrlService->UrlRepository:int: saveUrl(url)
+UrlRepository->-UrlService:ret
+UrlService->Url:String: getAlias()
+Url->-UrlService:alias
+UrlService->Url:setUrl(SHORTENER_PREFIX + alias)
+Url->-UrlService:
+UrlService->-UrlController:url
+UrlController->ReduceResponse:creates(alias,url,statistics)
+ReduceResponse->-UrlController:reduce_response
+UrlController->ResponseEntity:create(201,reduce_response)
+ResponseEntity->-UrlController:response_entity
+UrlController->RestClient: response_entity
+note left of UrlController
+  Exceptions are thrown by SpringBoot and they are handled by ErrorHandlerController object.
+end note

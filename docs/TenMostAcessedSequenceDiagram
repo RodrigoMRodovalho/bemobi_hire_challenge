@@ -1,0 +1,13 @@
+title Ten Most Accessed Urls Sequence Diagram
+
+RestClient->+UrlController:ResponseEntity:getTenMost()
+note left of UrlController : GET Endpoint=> /topten
+UrlController->+UrlService:List<Url>: getMostAccessedUrls()
+UrlService->+UrlRepository:List<Url>: getMostTenAccessedUrl()
+UrlRepository->-UrlService: urls
+UrlService->-UrlController: urls
+UrlController->+*MostAccessedResponse:create(urls)
+MostAccessedResponse->-UrlController:response
+UrlController->+*ResponseEntity:create(200,response)
+ResponseEntity->-UrlController:response_entity
+UrlController->-RestClient:response_entity

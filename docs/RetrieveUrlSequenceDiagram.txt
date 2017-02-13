@@ -4,18 +4,22 @@ RestClient->+UrlController: ResponseEntity: expandUrl(alias)
 note left of UrlController: GET Method - Endpoint=> http://shortener/expand  Params=> alias
 UrlController->+UrlService:Url: getExpandedUrl(alias)
 UrlService->+UrlRepository:Url: getUrlByAlias(alias)
-UrlRepository->-UrlService:url
+UrlRepository->UrlService:url
 alt url != null
-    UrlService->+UrlRepository:int:updateUrlAccess()
+    UrlService->UrlRepository:int:updateUrlAccess()
     UrlRepository->-UrlService:ret
-    UrlService->-UrlController:expanded_url
-    UrlService->*Url:String getAlias()
+    UrlService->+*Url:String getAlias()
     Url->UrlService:alias
-    UrlService->*Url:String getUrl()
-    Url->UrlService:url
+    UrlService->Url:String getUrl()
+    Url->-UrlService:url
+    UrlService->-UrlController:expanded_url
     UrlController->+ExpandResponse:ExpandResponse:creates(alias,url))
     ExpandResponse->-UrlController:expand_response
-    UrlController->+ResponseEntity:ResponseEntity:create(200,expand_response)
+    UrlController->+HttpHeader:create
+    HttpHeader->UrlController:httpHeader
+    UrlController->HttpHeader:setLocation(expanded_url)
+    HttpHeader->-UrlController:
+    UrlController->+ResponseEntity:ResponseEntity:create(303,httpHeader,expand_response)
     ResponseEntity->-UrlController:response_entity
     UrlController->-RestClient:response_entity
 else
@@ -27,3 +31,4 @@ note over UrlService: throws new ShortenedUrlNotFoundException(alias)
     ResponseEntity->-ErrorHandlerController:response_entity
     ErrorHandlerController->-RestClient:response_entity
 end
+

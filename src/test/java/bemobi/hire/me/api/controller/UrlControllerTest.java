@@ -31,9 +31,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 /**
@@ -139,7 +137,8 @@ public class UrlControllerTest {
         mockMvc.perform(get(Constants.URL_MAPPING.EXPAND)
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("alias",url.getAlias()))
-                .andExpect(status().isOk())
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string("Location",url.getUrl()))
                 .andExpect(content().json(gson.toJson(
                         ExpandResponse.builder()
                                 .alias(url.getAlias())

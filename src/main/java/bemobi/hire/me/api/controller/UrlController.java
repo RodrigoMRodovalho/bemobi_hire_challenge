@@ -11,10 +11,13 @@ import bemobi.hire.me.api.response.ExpandResponse;
 import bemobi.hire.me.api.response.ReduceResponse;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -55,12 +58,16 @@ public class UrlController {
     }
 
     @RequestMapping(value = Constants.URL_MAPPING.EXPAND,method = RequestMethod.GET)
-    public ResponseEntity expandUrl(@RequestParam String alias) throws ShortenedUrlNotFoundException {
+    public ResponseEntity expandUrl(@RequestParam String alias) throws ShortenedUrlNotFoundException, URISyntaxException {
 
         Url expandedUrl = urlService.getExpandedUrl(alias);
 
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(new URI(expandedUrl.getUrl()));
+
         return ResponseEntity
-                .ok()
+                .status(HttpStatus.SEE_OTHER)
+                .headers(httpHeaders)
                 .body(gson.toJson(
                         ExpandResponse.builder()
                                 .alias(expandedUrl.getAlias())
